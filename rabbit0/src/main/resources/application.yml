@@ -1,0 +1,19 @@
+server:
+  port: 9091
+
+spring:
+  profiles:
+    active: dev
+  rabbitmq:
+    addresses: ${rabbitmq.host}
+    port: ${rabbitmq.port}
+    username: ${rabbitmq.username}
+    password: ${rabbitmq.password}
+    publisher-confirms: ${rabbitmq.publisher-confirms}
+    publisher-returns: ${rabbitmq.publisher-returns}
+    virtual-host: ${rabbitmq.virtual-host}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 10
+        concurrency: 10
