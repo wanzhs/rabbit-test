@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import static com.wanzhs.rabbit.mp_multiple_host.RabbitMulConstants.declareName;
 
 @Slf4j
-@Component
-@RabbitListener(containerFactory = "myListenerContainer2",queues = declareName)
+//@Component
+//@RabbitListener(containerFactory = "myListenerContainer2",queues = declareName)
 public class Receiver2 {
     @RabbitHandler
     public void receiveUser(User user) {

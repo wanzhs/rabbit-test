@@ -3,6 +3,7 @@ package com.wanzhs.rabbit.mp_multiple_host;
 import com.google.common.collect.Maps;
 import com.rabbitmq.client.Channel;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -26,6 +27,7 @@ import static com.wanzhs.rabbit.mp_multiple_host.RabbitMulConstants.virtualHost1
  */
 @Configuration
 @Data
+@Slf4j
 public class RabbitMQConfig1 {
     @Value("${rabbitmq.username}")
     private String userName;
@@ -55,19 +57,21 @@ public class RabbitMQConfig1 {
         connectionFactory.setPublisherConfirms(publisherConfirms);
         connectionFactory.setPublisherReturns(publisherReturns);
         connectionFactory.setVirtualHost(virtualHost1);
-        Map<String, Object> paramMap = Maps.newHashMap();
-        paramMap.put("x-delayed-type", "direct");
-
-        Channel channel=connectionFactory.createConnection().createChannel(false);
         try {
+            Map<String, Object> paramMap = Maps.newHashMap();
+            paramMap.put("x-delayed-type", "direct");
+            Channel channel=connectionFactory.createConnection().createChannel(false);
             channel.exchangeDeclare(declareName,"x-delayed-message",false,true,false,paramMap);
             channel.queueDeclare(declareName,false,false,true,null);
             channel.exchangeBind(declareName,declareName,"com.wanzhs",null);
 //            channel.queueBind(declareName,declareName,"com.wanzhs",null);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+//            e.printStackTrace();
+            log.info("rabbit mq 启动失败！！！！！！");
         }
-        return connectionFactory;
+        finally {
+            return connectionFactory;
+        }
     }
 
     /**
@@ -75,7 +79,7 @@ public class RabbitMQConfig1 {
      * @description: 消费端 rabbit监听工厂
      * @date:2019/2/15 15:02
      */
-    @Bean("myListenerContainer")
+    @Bean("myListenerContainer1")
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory() {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setMessageConverter(integrationEventMessageConverter());
@@ -88,7 +92,7 @@ public class RabbitMQConfig1 {
      * @description: 生产者
      * @date:2019/2/15 14:31
      */
-    @Bean(name = "myTemplate")
+    @Bean(name = "myTemplate1")
     RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(integrationEventMessageConverter());

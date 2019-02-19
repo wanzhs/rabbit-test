@@ -10,7 +10,7 @@ import static com.wanzhs.rabbit.mp_multiple_host.RabbitMulConstants.declareName;
 
 @Slf4j
 @Component
-@RabbitListener(containerFactory = "myListenerContainer",queues =declareName)
+@RabbitListener(containerFactory = "myListenerContainer1",queues =declareName)
 public class Receiver1 {
     @RabbitHandler
     public void receiveUser(User user) {
@@ -19,5 +19,9 @@ public class Receiver1 {
     @RabbitHandler
     public void receiveStr(String str) {
         log.info("##str#receiver1## = {}",str);
+    }
+    @RabbitHandler
+    public void receiveObj(Object object) {
+        log.info("##obj#receiver1## = {}",object);
     }
 }
