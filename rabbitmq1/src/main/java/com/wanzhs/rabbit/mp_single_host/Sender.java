@@ -21,7 +21,7 @@ public class Sender {
 
     @RequestMapping(value = "/send/{abc}", method = RequestMethod.GET)
     public String test(@PathVariable(value = "abc") String abc) {
-        rabbitTemplate.convertAndSend("spring-boot", abc + " from RabbitMQ!");
+        rabbitTemplate.convertAndSend("com.wanzhs", abc + " from RabbitMQ!");
         return "abc";
     }
     @RequestMapping(value = "/send/{username}/{password}/{phone}", method = RequestMethod.GET)

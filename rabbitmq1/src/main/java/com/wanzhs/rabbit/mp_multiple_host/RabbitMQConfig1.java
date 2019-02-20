@@ -4,17 +4,21 @@ import com.google.common.collect.Maps;
 import com.rabbitmq.client.Channel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
 import java.util.Map;
 
 import static com.wanzhs.rabbit.mp_multiple_host.RabbitMulConstants.declareName;
@@ -48,30 +52,33 @@ public class RabbitMQConfig1 {
     private boolean publisherReturns;
 
 
-    @Bean
+    @Bean("connectionFactory")
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(host);
-        connectionFactory.setPort(port);
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(host, port);
         connectionFactory.setUsername(userName);
         connectionFactory.setPassword(password);
         connectionFactory.setPublisherConfirms(publisherConfirms);
         connectionFactory.setPublisherReturns(publisherReturns);
         connectionFactory.setVirtualHost(virtualHost1);
+        Map<String, Object> paramMap = Maps.newHashMap();
+        paramMap.put("x-delayed-type", "direct");
+        Channel channel = connectionFactory.createConnection().createChannel(false);
         try {
-            Map<String, Object> paramMap = Maps.newHashMap();
-            paramMap.put("x-delayed-type", "direct");
-            Channel channel=connectionFactory.createConnection().createChannel(false);
-            channel.exchangeDeclare(declareName,"x-delayed-message",false,true,false,paramMap);
-            channel.queueDeclare(declareName,false,false,true,null);
-            channel.exchangeBind(declareName,declareName,"com.wanzhs",null);
+            channel.exchangeDeclare(declareName, "x-delayed-message", true, false, false, paramMap);
+            channel.queueDeclare(declareName, true, false, false, null);
+            channel.exchangeBind(declareName, declareName, "com.wanzhs", null);
 //            channel.queueBind(declareName,declareName,"com.wanzhs",null);
         } catch (Exception e) {
 //            e.printStackTrace();
-            log.info("rabbit mq 启动失败！！！！！！");
+            log.info("mq declare queue exchange fail ", e);
+        } finally {
+            try {
+                channel.close();
+            } catch (Exception e) {
+                log.error("mq channel close fail ", e);
+            }
         }
-        finally {
-            return connectionFactory;
-        }
+        return connectionFactory;
     }
 
     /**
@@ -80,10 +87,16 @@ public class RabbitMQConfig1 {
      * @date:2019/2/15 15:02
      */
     @Bean("myListenerContainer1")
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory() {
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+            SimpleRabbitListenerContainerFactoryConfigurer configurer,
+            @Qualifier("connectionFactory") ConnectionFactory connectionFactory
+    ) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setAcknowledgeMode(AcknowledgeMode.AUTO);
+        factory.setConcurrentConsumers(10);
+        factory.setPrefetchCount(10);
         factory.setMessageConverter(integrationEventMessageConverter());
-        factory.setConnectionFactory(connectionFactory());
+        configurer.configure(factory, connectionFactory);
         return factory;
     }
 
@@ -93,7 +106,8 @@ public class RabbitMQConfig1 {
      * @date:2019/2/15 14:31
      */
     @Bean(name = "myTemplate1")
-    RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+    RabbitTemplate rabbitTemplate(@Qualifier("connectionFactory")
+                                          ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(integrationEventMessageConverter());
         template.setExchange(declareName);

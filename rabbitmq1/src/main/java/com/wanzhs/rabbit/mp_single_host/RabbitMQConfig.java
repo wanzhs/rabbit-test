@@ -42,9 +42,9 @@ public class RabbitMQConfig {
     @Value("${rabbitmq.port}")
     private int port;
 
-    final static String queueName = "spring-boot";
-    final static String exchangeName = "spring-boot-exchange";
-    final static String virtualHost = "/wanzhs";
+    final static String queueName = "com.wanzhs";
+    final static String exchangeName = "com.topic.wanzhs";
+    final static String virtualHost = "/wanzhs1";
 
     @Bean
     public ConnectionFactory connectionFactory() {

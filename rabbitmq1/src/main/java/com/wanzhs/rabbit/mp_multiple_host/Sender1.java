@@ -19,43 +19,24 @@ import static com.wanzhs.rabbit.mp_multiple_host.RabbitMulConstants.declareName;
  */
 @Slf4j
 @RestController
-public class Sender {
-    //    @Resource(name = "myTemplate2")
-//    RabbitTemplate myTemplate2;
-
+public class Sender1 {
     @Resource(name = "myTemplate1")
     RabbitTemplate myTemplate1;
 
-    @RequestMapping(value = "/send/{abc}", method = RequestMethod.GET)
+    @RequestMapping(value = "/send1/{abc}", method = RequestMethod.GET)
     public String testabc(@PathVariable(value = "abc") String abc) {
         log.info("sender:{}",abc);
         myTemplate1.convertAndSend(declareName, declareName,abc + " from RabbitMQ!");
-        return "abc";
+        return "abc1";
     }
 
-    @RequestMapping(value = "/send/{username}/{password}/{phone}", method = RequestMethod.GET)
+    @RequestMapping(value = "/send1/{username}/{password}/{phone}", method = RequestMethod.GET)
     public String testuser(@PathVariable(value = "username") String username,
                            @PathVariable(value = "password") String password,
                            @PathVariable(value = "phone") String phone) {
         User user = new User();
         user.setUsername(username).setPassword(password).setPhone(phone);
         myTemplate1.convertAndSend(declareName, user);
-        return "user";
-    }
-
-    @RequestMapping(value = "/send2/{username}/{password}/{phone}", method = RequestMethod.GET)
-    public String testuser2(@PathVariable(value = "username") String username,
-                            @PathVariable(value = "password") String password,
-                            @PathVariable(value = "phone") String phone) {
-        User user = new User();
-        user.setUsername(username).setPassword(password).setPhone(phone);
-//        myTemplate2.convertAndSend(declareName,user);
-        return "user";
-    }
-
-    @RequestMapping(value = "/send2/{abc}", method = RequestMethod.GET)
-    public String test2(@PathVariable(value = "abc") String abc) {
-//        myTemplate2.convertAndSend(declareName, abc + " from RabbitMQ!");
-        return "abc";
+        return "user1";
     }
 }
